@@ -253,18 +253,19 @@ const _createWaterMaterial = () => {
 
             // float foamDistortion = ( ds2.g * 2. + ds.g * 4.);
             float distortionDepth = getDepthFade(fragmentLinearEyeDepth, linearEyeDepth, 8., 2.);
-            vec2 foamDistortion = vec2(ds2.r + ds.r, ds2.g + ds.g);
-            float foamDepth = getDepthFade(fragmentLinearEyeDepth, linearEyeDepth, 5., 2.);
+            float distortionDegree = pow(clamp((1. - distortionDepth), 0.2, 1.0), 0.5);
+            vec2 foamDistortion = vec2(ds2.r + ds.r, ds2.g + ds.g) * distortionDegree;
+            float foamDepth = getDepthFade(fragmentLinearEyeDepth, linearEyeDepth, 8., 2.);
             float foamDiff = saturate( fragmentLinearEyeDepth - linearEyeDepth );
-            float foamUvY = vPos.x * 0.01;
-            float foamUvX = foamDepth * 1.0 - uTime * 0.2;
-            vec2 foamUv = mix(vec2(foamUvY, foamUvX), foamDistortion, 0.05);
+            float foamUvY = (vPos.x + vPos.z) * 0.03;
+            float foamUvX = foamDepth * 1.5 - uTime * 0.4;
+            vec2 foamUv = mix(vec2(foamUvY, foamUvX), foamDistortion, 0.2);
             vec4 foamTex = texture2D(foamTexture, foamUv);
-            foamTex = step(vec4(0.9), foamTex);
-            vec4 foamT = vec4(saturate(abs((foamDiff + foamTex.g - uTime * 0.05) * 8. * PI)) * foamTex.r * (1.0 - foamDepth));
+            foamTex = step(vec4(0.99), foamTex);
+            vec4 foamT = vec4(saturate(abs((foamDiff + foamTex.g - uTime * 0.05) * 8. * PI)) * foamTex.r * (1.0 - foamDepth) * 2.);
             // foamT = step(vec4(0.5), foamT);
             foamT = mix(vec4(0.), foamT, foamDepth);
-            foamT.rgb *= 5.;
+            // foamT.rgb *= 5.;
             vec4 foamLineCutOut = saturate(foamT);
             vec4 col2 = col * ((vec4(1.0) - foamLineCutOut)) + foamT;
 
